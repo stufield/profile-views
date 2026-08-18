@@ -9,12 +9,23 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - run: python3 scripts/collect_views.py
+        with:
+          token: ${{ secrets.VIEWS_TOKEN }}
+          persist-credentials: true
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::curl
+            any::jsonlite
+      - run: Rscript scripts/collect-views.R
         env:
           GH_TOKEN: ${{ secrets.VIEWS_TOKEN }}
       - run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/views.csv
+          git add data/views.csv svg/badge.svg
           git diff --quiet --cached || git commit -m "chore: update traffic views"
           git push
