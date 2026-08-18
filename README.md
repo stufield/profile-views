@@ -1,61 +1,114 @@
-# 🚀 GitHub Profile Views Counter [<img alt="Image of my-profile-view-counter" src="https://github.com/gayanvoice/my-profile-view-counter/blob/master/graph/372372861/small/week.png" height="20">](https://github.com/gayanvoice/my-profile-view-counter/blob/master/readme/372372861/week.md)
+# Repo Traffic Views
 
-[![Image of my-profile-view-counter](https://github.com/gayanvoice/my-profile-view-counter/blob/master/svg/372372861/badge.svg)](https://github.com/gayanvoice/my-profile-view-counter/blob/master/readme/372372861/week.md)
+Self-contained snapshots of GitHub repository traffic, with a
+generated badge. No third-party services, no external uptime
+dependency.
 
- 
-Many GitHub page views counters are not stable as it seems. Any service disruptions or simply removal of these services can lose your profile views. Use this GitHub Action to record changes. It generates badges, charts, and tables for each repository and a badge for total views for your profile.
+[![repo views](https://raw.githubusercontent.com/stufield/profile-views/master/svg/views-badge.svg)](https://github.com/stufield/profile-views)
 
-## ▶️ Watch
-[![How to Setup GitHub Profile Views Counter for your GitHub profile](https://img.youtube.com/vi/K6FYiP_XRuU/0.jpg)](https://www.youtube.com/watch?v=K6FYiP_XRuU)
+## Why
 
-## Why do you need 🚀 GitHub Profile Views Counter?
-The main problem of using external services is what you do when they cut off their services? You will see a broken URL of the SVG you used to see profile views, and the next thing is you already lost thousands of profile views.
+GitHub retains only **14 days** of traffic data. Once a day ages
+out of that window it is gone permanently, and there is no way to
+recover it.
 
-But this GitHub Profile Views Counter is different from others. It’s a public repository in your profile, and it stores all the data and SVG files. So you don’t lose anything, and it updates the page views every 6 hours. It fetches insights data of your repository from GitHub API. It records the number of unique visitors and also page views.
+This repository runs a cron job that appends the current window to
+a CSV under version control. History accumulates indefinitely and
+is owned outright, so it cannot be lost to a service shutting down
+or rate-limiting its free tier.
 
-## Features
-**Charts —** The action generates charts for the week, month, and year. The below chart is for the week for a repository. Go to gayanvoice/my-profile-view-counter to see how it works.
+## What it measures
 
-**Tables —** The action generates charts for the week, month, and year.
+**Repository traffic views** — visits to your repo pages,
+aggregated across every repo you own.
+
+This is *not* profile page views. GitHub exposes no API for
+profile README views, so any counter claiming to report them is
+using an external tracking pixel. That is the dependency this
+repository exists to avoid.
+
+## How it works
+
+`.github/workflows/action.yml` runs every 6 hours:
+
+1. Check out the repo using `VIEWS_TOKEN`.
+2. Install R plus `curl` and `jsonlite` from Posit Package
+   Manager binaries.
+3. Run `scripts/collect-views.R`.
+4. Commit `data/views.csv` and `svg/views-badge.svg` if either changed.
+
+The script lists every repo you own, reads
+`/repos/{owner}/{repo}/traffic/views` for each, and upserts the
+results by `(repo, date)`.
+
+Upserting rather than appending makes reruns **idempotent** — the
+cron fires four times a day inside the same 14-day window, so rows
+are overwritten, never duplicated. It also lets late corrections
+from GitHub heal earlier snapshots.
+
+## Files
+
+| Path                       | Purpose                       |
+|----------------------------|-------------------------------|
+| `scripts/collect-views.R`  | Fetch, upsert, write badge    |
+| `data/views.csv`           | Accumulated daily history     |
+| `svg/views-badge.svg`      | Generated cumulative badge    |
+| `.github/workflows/`       | Scheduled workflow            |
+
+### Data schema
+
+`data/views.csv` holds one row per repo per day:
+
+```
+repo,date,views,uniques
+stufield/helpr,2026-08-18,25,5
+```
+
 ## Setup
-**1 —** 🚀 Go to gayanvoice/github-profile-views-counter and click on **Use this template** button to create a new repository
 
-By using a template you don’t need to create the files from scratch, and all you need is to change the configuration.
+Create a personal access token and store it as the repository
+secret `VIEWS_TOKEN` under **Settings → Secrets and variables →
+Actions**.
 
-![GitHub Profile Views Counter - Click on Use this template button to create a new repository](https://miro.medium.com/max/600/1*wvbb87wOd1wCHKJh06vjPA.png)
+The traffic API requires **push** access even for public repos, so
+a read-only token returns 403. Minimum scope is `public_repo`; use
+`repo` to include private repositories.
 
+The same token authenticates the commit back to this repository,
+so no separate push credential is needed.
 
-**2 —** ⚡️ Enter a **repository name** and select repository type to **public repository** and click on **Create repository from template** button
+## Running locally
 
-You can give any name for the repository. You need to select repository type to public. Because GitHub provides an unlimited number of action minutes for public repositories.
+```sh
+Rscript --vanilla scripts/collect-views.R
+```
 
-If you choose private, the free usage will limit to 2000 minutes per month. Go to GitHub Pricing page for more pricing plans.
+Functions are testable in isolation — `main()` only fires under
+`Rscript`, not when the file is sourced:
 
-![GitHub Profile Views Counter - Click on create repository from template button to create the repository](https://miro.medium.com/max/600/1*hHdIM_fVnkdVdQGrbL1jRA.png)
+```r
+source("scripts/collect-views.R")
+views <- read_views("data/views.csv")
+sum(views$views)
+```
 
-After you click on **Create repository from template** button, it will take some time to create the repository.
+`collect_views()` takes a `fetch` argument, so it can be driven
+from a mock payload without touching the network.
 
-**3 —** 🔒 Create a new personal access token with **repo** and **workflow** options
+## Using the badge
 
-Go to Personal Access Tokens and click on Generate new token button. Give it any name and select repo and workflow options and click on Generate token button. ✂️ Copy the token.
+```html
+<img src="https://raw.githubusercontent.com/stufield/profile-views/master/svg/views-badge.svg" alt="Repo Views" />
+```
 
-![GitHub Profile Views Counter - create a new personal access token with repo and workflow options](https://miro.medium.com/max/700/1*YMft8U6IYTpBg7C5cASDUA.png)
+Use `raw.githubusercontent.com`. A `/blob/` URL serves an HTML
+page, not an image, and will not render.
 
-**4 —** 🔑 Go to your profile views counter repository and go to **Settings**, and select **Secrets** option from left side bar. Click on **New repository secret** button and enter **name** as **INSIGHTS_TOKEN** and 📋 paste the **personal access token** under **value**. Click on **Add secret** button.
+## Limitations
 
-![GitHub Profile Views Counter - add repository secret by using repository secrets](https://miro.medium.com/max/700/1*jLtkxQNj2qrGcc4bLIvw3A.png)
-
-**5 —** 📄 Go to your profile views counter repository. Go to **config.json** and click on edit button. Add repository names.
-
-![GitHub Profile Views Counter - edit config.json file to add repository names](https://miro.medium.com/max/700/1*35wJBw75Fp5D_5t-fhaT_g.png)
-
-**6 —** Go to your profile views counter repository and click on Actions tab. Select the workflow and click on **Run workflow** button.
-
-![GitHub Profile Views Counter - click on run workflow button](https://miro.medium.com/max/700/1*hKkJ9EXlK14b3H3SeCNk4Q.png)
-
-It will take few minutes depends on number of repositories you have entered to the workflow. It will generate total views badge, repository badges, and markdown files.
-
-## 📄 License
-- Repository: [gayanvoice/github-profile-views-counter](https://github.com/gayanvoice/github-profile-views-counter)
-- Source - [gayanvoice/github-insights](https://github.com/gayanvoice/github-insights)
-- Code: [MIT](./LICENSE) © [Gayan Kuruppu](https://github.com/gayanvoice)
+- GitHub proxies and caches README images, so the displayed count
+  lags the 12-hour cron. The data is current; the display is not.
+- Repos without push access are logged and skipped rather than
+  failing the run.
+- Only owned repos are collected — no forks or org repos you
+  merely contribute to.
