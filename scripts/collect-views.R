@@ -16,7 +16,7 @@ library(jsonlite)
 
 api <- "https://api.github.com"
 out_csv <- "data/views.csv"
-badge_svg <- "svg/badge.svg"
+badge_svg <- "svg/views-badge.svg"
 
 
 # Fetch helpers ------
@@ -163,14 +163,14 @@ main <- function() {
   # Cumulative across all history ever recorded -- the number GitHub
   # itself cannot report, since it keeps only 14 days.
   total <- sum(views$views)
-  write_badge("repo views", format(total, big.mark = ","))
-  message(sprintf(
-                  "%s: %d -> %d rows | total views %d",
-                  out_csv, nrow(old), nrow(views), total
-                  ))
+  write_badge("Repo Views", format(total, big.mark = ","))
+  message(
+    sprintf("%s: %d -> %d rows | total views %d",
+            out_csv, nrow(old), nrow(views), total)
+  )
 }
 
-# Runs on `Rscript collect_views.R` but not when sourced,
+# Runs on `Rscript collect-views.R` but not when sourced,
 # which keeps the functions testable in isolation.
 if (sys.nframe() == 0L) {
   main()
