@@ -29,7 +29,7 @@ repository exists to avoid.
 
 ## How it works
 
-`.github/workflows/action.yml` runs every 6 hours:
+`.github/workflows/action.yml` runs every 12 hours:
 
 1. Check out the repo using `VIEWS_TOKEN`.
 2. Install R plus `curl` and `jsonlite` from Posit Package
@@ -98,7 +98,7 @@ from a mock payload without touching the network.
 ## Using the badge
 
 ```html
-<img src="https://raw.githubusercontent.com/stufield/profile-views/master/svg/views-badge.svg" alt="Repo Views" />
+<img src="https://raw.githubusercontent.com/stufield/repo-views/master/svg/views-badge.svg" alt="Repo Views" />
 ```
 
 Use `raw.githubusercontent.com`. A `/blob/` URL serves an HTML

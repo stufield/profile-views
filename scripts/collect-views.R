@@ -28,7 +28,7 @@ api_get <- function(path) {
   handle_setheaders(h, Authorization = paste("Bearer", Sys.getenv("GH_TOKEN")),
                     Accept = "application/vnd.github+json",
                     `X-GitHub-Api-Version` = "2022-11-28",
-                    `User-Agent` = "profile-views-collector"
+                    `User-Agent` = "repo-views-collector"
   )
   res <- curl_fetch_memory(paste0(api, path), handle = h)
   if (res$status_code >= 300L) {

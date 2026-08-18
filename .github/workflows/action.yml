@@ -1,11 +1,11 @@
-name: GitHub Profile Views Counter CI
+name: GitHub Repo Views Counter GHA
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */12 * * *'
   workflow_dispatch:
 jobs:
   release:
-    name: GitHub Profile Views Counter Action
+    name: GitHub Repo Views Counter
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -26,6 +26,6 @@ jobs:
       - run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/views.csv svg/badge.svg
+          git add data/views.csv svg/views-badge.svg
           git diff --quiet --cached || git commit -m "chore: update traffic views"
           git push
