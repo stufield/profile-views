@@ -3,6 +3,10 @@
   "advancedMode": "false",
   "language": "en-US",
   "repository": [
-    "repository-name"
+    "stufield/helpr",
+    "stufield/wranglr",
+    "stufield/gitr",
+    "stufield/libml",
+    "stufield/stabilityselectr"
   ]
 }
